@@ -128,15 +128,34 @@ const Canvas = ({ color, brushSize, tool, onClear, onUndo, onRedo }) => {
     }
   }, [onClear, saveToHistory]);
 
+  const getCoordinates = (e) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return { x: 0, y: 0 };
+    
+    const rect = canvas.getBoundingClientRect();
+    
+    // Handle touch events
+    if (e.touches && e.touches.length > 0) {
+      return {
+        x: e.touches[0].clientX - rect.left,
+        y: e.touches[0].clientY - rect.top
+      };
+    }
+    
+    // Handle mouse events
+    return {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    };
+  };
+
   const startDrawing = (e) => {
     e.preventDefault();
     const canvas = canvasRef.current;
     if (!canvas) return;
     
     const ctx = canvas.getContext('2d');
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const { x, y } = getCoordinates(e);
 
     setIsDrawing(true);
     setStartPos({ x, y });
@@ -176,9 +195,7 @@ const Canvas = ({ color, brushSize, tool, onClear, onUndo, onRedo }) => {
     if (!canvas) return;
     
     const ctx = canvas.getContext('2d');
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const { x, y } = getCoordinates(e);
 
     if (tool === 'brush' || tool === 'eraser') {
       ctx.lineTo(x, y);
@@ -224,6 +241,10 @@ const Canvas = ({ color, brushSize, tool, onClear, onUndo, onRedo }) => {
       onMouseMove={draw}
       onMouseUp={stopDrawing}
       onMouseLeave={stopDrawing}
+      onTouchStart={startDrawing}
+      onTouchMove={draw}
+      onTouchEnd={stopDrawing}
+      onTouchCancel={stopDrawing}
       style={{ display: 'block' }}
     />
   );
